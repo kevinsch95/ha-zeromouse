@@ -22,3 +22,20 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semantic version with a changelog entry
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r .version custom_components/zeromouse/manifest.json)
+          if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::manifest.json version '$VERSION' is not MAJOR.MINOR.PATCH"; exit 1
+          fi
+          grep -q "^## \[$VERSION\]" CHANGELOG.md || {
+            echo "::error::CHANGELOG.md has no '## [$VERSION]' section"; exit 1; }
+          echo "Version $VERSION OK"
+

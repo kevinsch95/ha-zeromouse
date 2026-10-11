@@ -119,6 +119,21 @@ Open **Settings → Devices & services → ZeroMOUSE → Configure** to change:
 
 The integration is read-only: it does not change modes or settings on the device.
 
+## Versions
+
+The integration follows [Semantic Versioning](https://semver.org): **MAJOR** for breaking changes, **MINOR**
+for new features, **PATCH** for fixes. Every version is a GitHub release, which HACS uses to offer updates.
+See [CHANGELOG.md](CHANGELOG.md) for what changed.
+
+To publish a new version:
+
+1. Set `version` in `custom_components/zeromouse/manifest.json`, for example `0.6.0`.
+2. Move the notes under `## [Unreleased]` in `CHANGELOG.md` into a new `## [0.6.0] - YYYY-MM-DD` section.
+3. Commit, then tag and push: `git tag v0.6.0 && git push origin main v0.6.0`.
+
+The **Release** workflow checks that the tag matches the manifest and the changelog, then publishes the release
+with that changelog section as its notes.
+
 ## Troubleshooting
 
 Enable debug logging:
