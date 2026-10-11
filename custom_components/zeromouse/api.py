@@ -108,6 +108,7 @@ LIST_EVENTS_QUERY = """
         images {
           classification_byNet
           imageIndex
+          milliseconds
         }
       }
       nextToken

@@ -67,6 +67,9 @@
     "image": {
       "latest_event_image": {
         "name": "Latest event image"
+      },
+      "latest_event_animation": {
+        "name": "Latest event animation"
       }
     },
     "sensor": {
@@ -121,7 +124,7 @@
   "services": {
     "download_images": {
       "name": "Download event images",
-      "description": "Saves all images of a ZeroMOUSE event to a folder. Defaults to the latest event.",
+      "description": "Saves all images of a ZeroMOUSE event to a folder, plus an animated GIF when there are several. Defaults to the latest event.",
       "fields": {
         "device_id": {
           "name": "Device",

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+from typing import Any
 
 import voluptuous as vol
 
@@ -20,6 +22,9 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from .api import ZeroMouseError
 from .const import DOMAIN, IMAGE_SUBFOLDER, MAX_IMAGES_PER_EVENT
 from .coordinator import ZeroMouseConfigEntry, ZeroMouseCoordinator
+from .gif import build_gif
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_DOWNLOAD_IMAGES = "download_images"
 ATTR_DEVICE_ID = "device_id"
@@ -90,10 +95,16 @@ async def _async_download_images(call: ServiceCall) -> ServiceResponse:
         )
 
     # Known image indexes for the latest event; otherwise probe sequentially.
-    known = latest.image_indexes if latest and latest.event_id == event_id else []
+    is_latest = latest is not None and latest.event_id == event_id
+    known = latest.image_indexes if is_latest else []
+    capture_times = (
+        dict(zip(known, latest.image_times, strict=True)) if is_latest else {}
+    )
     candidates = known or list(range(MAX_IMAGES_PER_EVENT))
 
     files: list[str] = []
+    frames: list[bytes] = []
+    times: list[int | None] = []
     misses = 0
     for index in candidates:
         try:
@@ -115,6 +126,8 @@ async def _async_download_images(call: ServiceCall) -> ServiceResponse:
         path = Path(directory) / zm_id / event_id / f"{index}.jpg"
         await hass.async_add_executor_job(_write_file, path, image)
         files.append(str(path))
+        frames.append(image)
+        times.append(capture_times.get(index))
 
     if not files:
         raise HomeAssistantError(
@@ -122,7 +135,18 @@ async def _async_download_images(call: ServiceCall) -> ServiceResponse:
             translation_key="no_images",
             translation_placeholders={"event_id": event_id},
         )
-    return {"event_id": event_id, "files": files}
+    response: dict[str, Any] = {"event_id": event_id, "files": files}
+    if len(frames) > 1:
+        try:
+            gif = await hass.async_add_executor_job(build_gif, frames, times)
+        except (OSError, ValueError) as err:
+            # The photos are saved; only the animation is skipped.
+            _LOGGER.warning("Could not build animation for %s: %s", event_id, err)
+        else:
+            gif_path = Path(directory) / zm_id / event_id / "animation.gif"
+            await hass.async_add_executor_job(_write_file, gif_path, gif)
+            response["animation"] = str(gif_path)
+    return response
 
 
 @callback

@@ -19,6 +19,9 @@
     "image": {
       "latest_event_image": {
         "default": "mdi:camera"
+      },
+      "latest_event_animation": {
+        "default": "mdi:filmstrip"
       }
     },
     "sensor": {

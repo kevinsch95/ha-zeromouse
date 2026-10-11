@@ -67,6 +67,9 @@
     "image": {
       "latest_event_image": {
         "name": "Siste hendelsesbilde"
+      },
+      "latest_event_animation": {
+        "name": "Siste hendelsesanimasjon"
       }
     },
     "sensor": {
@@ -121,7 +124,7 @@
   "services": {
     "download_images": {
       "name": "Last ned hendelsesbilder",
-      "description": "Lagrer alle bildene fra en ZeroMOUSE-hendelse i en mappe. Standard er siste hendelse.",
+      "description": "Lagrer alle bildene fra en ZeroMOUSE-hendelse i en mappe, pluss en animert GIF når det er flere. Standard er siste hendelse.",
       "fields": {
         "device_id": {
           "name": "Enhet",

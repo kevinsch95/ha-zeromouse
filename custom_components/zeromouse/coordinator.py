@@ -78,6 +78,7 @@ class ZeroMouseEvent:
     cat_cluster_id: str | None
     title_image_index: int
     image_indexes: list[int]
+    image_times: list[int | None]
     is_favorite: bool
     raw: dict[str, Any]
 
@@ -88,13 +89,17 @@ class ZeroMouseEvent:
         classification = (
             raw_class if raw_class in CLASSIFICATIONS else CLASSIFICATION_UNKNOWN
         )
-        indexes = sorted(
-            {
-                int(img["imageIndex"])
-                for img in data.get("images") or []
-                if img and img.get("imageIndex") is not None
-            }
-        )
+        times: dict[int, int | None] = {}
+        for img in data.get("images") or []:
+            if not img or img.get("imageIndex") is None:
+                continue
+            try:
+                index = int(img["imageIndex"])
+            except (TypeError, ValueError):
+                continue
+            ms = img.get("milliseconds")
+            times[index] = int(ms) if isinstance(ms, (int, float)) else None
+        indexes = sorted(times)
         title = data.get("titleImageIndex")
         if title is None:
             title = indexes[0] if indexes else 0
@@ -108,6 +113,7 @@ class ZeroMouseEvent:
             cat_cluster_id=data.get("catClusterId_byUser") or data.get("catClusterId"),
             title_image_index=int(title),
             image_indexes=indexes,
+            image_times=[times[i] for i in indexes],
             is_favorite=_truthy(data.get("isFavorite")),
             raw=data,
         )
