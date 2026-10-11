@@ -133,7 +133,10 @@ async def _async_download_images(call: ServiceCall) -> ServiceResponse:
     if len(frames) > 1:
         try:
             gif = await hass.async_add_executor_job(
-                build_gif, [data for _, data in frames], times
+                build_gif,
+                [data for _, data in frames],
+                times,
+                coordinator.gif_slowdown,
             )
         except (OSError, ValueError) as err:
             # The photos are saved; only the animation is skipped.

@@ -42,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZeroMouseConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Reload when options change, so new GIFs use the new speed.
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
     # Live events; cancelled automatically when the entry unloads.
     realtime = ZeroMouseRealtime(
@@ -54,6 +56,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZeroMouseConfigEntry) ->
         hass, realtime.async_run(), f"{DOMAIN} live events"
     )
     return True
+
+
+async def _async_options_updated(
+    hass: HomeAssistant, entry: ZeroMouseConfigEntry
+) -> None:
+    """Reload the entry after an options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ZeroMouseConfigEntry) -> bool:

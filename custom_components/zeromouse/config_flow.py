@@ -8,17 +8,26 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
 from .api import ZeroMouseApi, ZeroMouseApiError, ZeroMouseAuthError
-from .const import DOMAIN
+from .const import CONF_GIF_SLOWDOWN, DEFAULT_GIF_SLOWDOWN, DOMAIN, MAX_GIF_SLOWDOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +58,12 @@ class ZeroMouseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ZeroMOUSE."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow."""
+        return ZeroMouseOptionsFlow()
 
     async def _async_validate(
         self, email: str, password: str
@@ -118,3 +133,35 @@ class ZeroMouseConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"email": reauth_entry.data[CONF_EMAIL]},
             errors=errors,
         )
+
+
+class ZeroMouseOptionsFlow(OptionsFlow):
+    """Let the user tune the event GIFs."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the options form."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={CONF_GIF_SLOWDOWN: int(user_input[CONF_GIF_SLOWDOWN])}
+            )
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_GIF_SLOWDOWN,
+                    default=self.config_entry.options.get(
+                        CONF_GIF_SLOWDOWN, DEFAULT_GIF_SLOWDOWN
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=0,
+                        max=MAX_GIF_SLOWDOWN,
+                        step=5,
+                        unit_of_measurement="%",
+                        mode=NumberSelectorMode.SLIDER,
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

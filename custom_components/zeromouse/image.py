@@ -177,7 +177,9 @@ class ZeroMouseLatestAnimation(_ZeroMouseEventImage):
         if not frames:
             return None, False
         try:
-            gif = await self.hass.async_add_executor_job(build_gif, frames, times)
+            gif = await self.hass.async_add_executor_job(
+                build_gif, frames, times, self.coordinator.gif_slowdown
+            )
         except (OSError, ValueError) as err:
             _LOGGER.warning("Could not build animation for %s: %s", event.event_id, err)
             return None, False

@@ -10,8 +10,7 @@ from PIL import Image
 
 # Playback timing (milliseconds). The photos carry their capture time; the gaps
 # are clamped to stay watchable, then everything is slowed down by
-# PLAYBACK_SLOWDOWN so the cat's movement is easier to follow.
-PLAYBACK_SLOWDOWN = 1.25
+# a slowdown factor (a user option) so the cat's movement is easier to follow.
 DEFAULT_FRAME_MS = 250
 MIN_FRAME_MS = 60
 MAX_FRAME_MS = 1000
@@ -19,12 +18,13 @@ LAST_FRAME_HOLD_MS = 1200
 MAX_WIDTH = 480
 
 
-def frame_durations(times: Sequence[int | None]) -> list[int]:
+def frame_durations(times: Sequence[int | None], slowdown: float = 1.0) -> list[int]:
     """Return per-frame display durations from capture times (ms).
 
     Frame i is shown until frame i+1 was captured. Missing or non-increasing
     times fall back to a default. The last frame is held a little longer so
-    the loop is easy to follow. All durations are scaled by PLAYBACK_SLOWDOWN.
+    the loop is easy to follow. All durations are multiplied by `slowdown`
+    (1.25 = 25% slower).
     """
     durations: list[int] = []
     for current, following in pairwise(times):
@@ -36,7 +36,7 @@ def frame_durations(times: Sequence[int | None]) -> list[int]:
         durations.append(LAST_FRAME_HOLD_MS)
     # GIF stores delays in 10 ms steps; round here instead of letting the
     # encoder truncate.
-    return [int(ms * PLAYBACK_SLOWDOWN / 10 + 0.5) * 10 for ms in durations]
+    return [int(ms * slowdown / 10 + 0.5) * 10 for ms in durations]
 
 
 def _shared_palette(images: Sequence[Image.Image]) -> Image.Image:
@@ -57,6 +57,7 @@ def _shared_palette(images: Sequence[Image.Image]) -> Image.Image:
 def build_gif(
     frames: Sequence[bytes],
     times: Sequence[int | None] | None = None,
+    slowdown: float = 1.0,
     max_width: int = MAX_WIDTH,
 ) -> bytes:
     """Return GIF bytes for the given JPEG frames (blocking, run in executor)."""
@@ -81,7 +82,9 @@ def build_gif(
         img.quantize(palette=palette, dither=Image.Dither.NONE) for img in images
     ]
 
-    durations = frame_durations(list(times) if times else [None] * len(images))
+    durations = frame_durations(
+        list(times) if times else [None] * len(images), slowdown
+    )
     out = io.BytesIO()
     paletted[0].save(
         out,

@@ -19,6 +19,8 @@ from .api import ZeroMouseApi, ZeroMouseApiError, ZeroMouseAuthError, ZeroMouseE
 from .const import (
     CLASSIFICATION_UNKNOWN,
     CLASSIFICATIONS,
+    CONF_GIF_SLOWDOWN,
+    DEFAULT_GIF_SLOWDOWN,
     DOMAIN,
     EVENT_NEW_DETECTION,
     LIVE_FOLLOWUP_DELAY,
@@ -182,7 +184,7 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
-        self.history = ZeroMouseHistory(hass, api)
+        self.history = ZeroMouseHistory(hass, api, self.gif_slowdown)
         self.live_connected = False
         self._followup_unsub: CALLBACK_TYPE | None = None
 
@@ -288,6 +290,12 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
                     "time": event.time.isoformat() if event.time else None,
                 },
             )
+
+    @property
+    def gif_slowdown(self) -> float:
+        """Return the GIF duration factor from the options (1.25 = 25% slower)."""
+        percent = self.config_entry.options.get(CONF_GIF_SLOWDOWN, DEFAULT_GIF_SLOWDOWN)
+        return 1 + float(percent) / 100
 
     # ------------------------------------------------------------------
     # Live updates

@@ -72,4 +72,9 @@ EXIT_MODES: Final = {
 EVENT_NEW_DETECTION: Final = f"{DOMAIN}_event"
 
 IMAGE_SUBFOLDER: Final = "zeromouse"
+
+# Option: how much slower than real time the event GIFs play, in percent.
+CONF_GIF_SLOWDOWN: Final = "gif_slowdown_percent"
+DEFAULT_GIF_SLOWDOWN: Final = 25
+MAX_GIF_SLOWDOWN: Final = 200
 MAX_IMAGES_PER_EVENT: Final = 20

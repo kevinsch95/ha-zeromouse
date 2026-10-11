@@ -1,3 +1,5 @@
+<img src="custom_components/zeromouse/brand/icon@2x.png" alt="" width="128" align="right">
+
 # ZeroMOUSE for Home Assistant
 
 Unofficial Home Assistant integration for the [ZeroMOUSE](https://zeromouse.com) smart cat-flap camera.
@@ -21,7 +23,7 @@ One Home Assistant device per ZeroMOUSE, with:
 | Entity | Type | Description |
 |---|---|---|
 | Latest event image | Image | Title photo of the newest event |
-| Latest event animation | Image (GIF) | All photos of the newest event as an animated GIF, played 25% slower than capture speed |
+| Latest event animation | Image (GIF) | All photos of the newest event as an animated GIF, played slower than capture speed (25% by default, see Options) |
 | Detection | Event | Fires on each new event; event type is the classification |
 | Prey detected | Binary sensor | On when the newest event was classified as prey |
 | Last event | Sensor (timestamp) | Time of the newest event (attributes: event id, cat, image count) |
@@ -100,6 +102,14 @@ data:
   device_id: 0123456789abcdef
 response_variable: result
 ```
+
+## Options
+
+Open **Settings → Devices & services → ZeroMOUSE → Configure** to change:
+
+- **Slow down GIFs** (0–200%, default 25%): how much longer each frame of the event GIFs is shown compared
+  with the time between the photos. 0% plays at capture speed, 100% at half speed. Applies to the animation
+  entity, the Media panel and the download action. The integration reloads when you save.
 
 ## How it works
 

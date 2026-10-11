@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="opening"><rect x="118" y="178" width="276" height="252" rx="30"/></clipPath>
+  </defs>
+  <!-- door -->
+  <rect x="36" y="12" width="440" height="488" rx="60" fill="#3F8F7F"/>
+  <rect x="41" y="17" width="430" height="478" rx="55" fill="none" stroke="#2F6E62" stroke-width="10"/>
+  <!-- door handle -->
+  <rect x="392" y="96" width="44" height="18" rx="9" fill="#2A5E54"/>
+  <!-- flap frame -->
+  <rect x="94" y="154" width="324" height="300" rx="50" fill="#22303A"/>
+  <!-- opening: daylight outside -->
+  <rect x="118" y="178" width="276" height="252" rx="30" fill="#F3E6C8"/>
+  <g fill="#161B20">
+    <!-- shoulders and chest behind the opening -->
+    <g clip-path="url(#opening)">
+      <path d="M176 430 C178 372 208 336 256 334 C304 336 334 372 336 430 Z"/>
+    </g>
+    <!-- head -->
+    <path d="M256 250 C302 250 330 278 330 312 C330 350 298 372 256 372 C214 372 182 350 182 312 C182 278 210 250 256 250 Z"/>
+    <!-- ears -->
+    <path d="M190 296 C188 272 190 248 196 228 C214 238 230 252 240 264 Z"/>
+    <path d="M322 296 C324 272 322 248 316 228 C298 238 282 252 272 264 Z"/>
+    <!-- left front leg reaching forward over the frame -->
+    <path d="M200 380 C196 410 192 442 190 470 C204 476 220 476 228 470 C232 442 236 412 240 384 Z"/>
+    <ellipse cx="208" cy="474" rx="26" ry="13"/>
+    <!-- right front leg, a step behind -->
+    <path d="M276 384 C278 408 282 430 286 446 C298 452 312 452 322 446 C318 424 314 402 312 380 Z"/>
+    <ellipse cx="302" cy="450" rx="24" ry="12"/>
+  </g>
+  <!-- eyes -->
+  <ellipse cx="232" cy="310" rx="8" ry="11" fill="#F3E6C8"/>
+  <ellipse cx="280" cy="310" rx="8" ry="11" fill="#F3E6C8"/>
+  <!-- flap pushed up and out by the cat -->
+  <path d="M118 178 L394 178 L410 216 L102 216 Z" fill="#A5B8C3"/>
+  <path d="M102 216 L410 216" stroke="#7D929E" stroke-width="7" stroke-linecap="round"/>
+</svg>

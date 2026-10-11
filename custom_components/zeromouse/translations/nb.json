@@ -169,5 +169,19 @@
     "history_failed": {
       "message": "Kunne ikke laste ZeroMOUSE-hendelseshistorikken: {error}"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ZeroMOUSE-innstillinger",
+        "description": "Hendelses-GIF-er spiller av bildene i samme tempo som de ble tatt. Senk farten for å gjøre kattens bevegelser lettere å følge.",
+        "data": {
+          "gif_slowdown_percent": "Senk farten på GIF-er"
+        },
+        "data_description": {
+          "gif_slowdown_percent": "0 % spiller i opptakstempo, 25 % gjør hvert bilde en firedel lengre, 100 % spiller i halv fart."
+        }
+      }
+    }
   }
 }

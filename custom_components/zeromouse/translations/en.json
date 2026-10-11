@@ -169,5 +169,19 @@
     "history_failed": {
       "message": "Could not load the ZeroMOUSE event history: {error}"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ZeroMOUSE options",
+        "description": "Event GIFs play back the photos at the speed they were taken. Slow them down to make the cat's movement easier to follow.",
+        "data": {
+          "gif_slowdown_percent": "Slow down GIFs"
+        },
+        "data_description": {
+          "gif_slowdown_percent": "0% plays at capture speed, 25% makes every frame last a quarter longer, 100% plays at half speed."
+        }
+      }
+    }
   }
 }

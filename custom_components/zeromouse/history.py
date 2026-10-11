@@ -98,10 +98,13 @@ async def async_fetch_frames(
 class ZeroMouseHistory:
     """Read-through cache of past events, per device."""
 
-    def __init__(self, hass: HomeAssistant, api: ZeroMouseApi) -> None:
-        """Initialize."""
+    def __init__(
+        self, hass: HomeAssistant, api: ZeroMouseApi, slowdown: float = 1.0
+    ) -> None:
+        """Initialize. The entry reloads (and the cache resets) on option changes."""
         self._hass = hass
         self._api = api
+        self._slowdown = slowdown
         self._events: dict[str, tuple[float, list[ZeroMouseEvent]]] = {}
         self._locks: dict[str, asyncio.Lock] = {}
         self._gifs: _LRU[str, bytes] = _LRU(MAX_CACHED_GIFS)
@@ -168,7 +171,7 @@ class ZeroMouseHistory:
         if not frames:
             return None
         gif = await self._hass.async_add_executor_job(
-            build_gif, [data for _, data in frames], times
+            build_gif, [data for _, data in frames], times, self._slowdown
         )
         if not event.image_indexes or len(frames) == len(event.image_indexes):
             self._gifs.put(key, gif)
