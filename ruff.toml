@@ -1,0 +1,2 @@
+# Keep the code compatible with Home Assistant releases running Python 3.13.
+target-version = "py313"
