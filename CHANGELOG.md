@@ -14,6 +14,11 @@ breaking changes. These are always listed under **Changed** or **Removed**.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-11
+
+### Fixed
+- The integration icon now shows on the repository information page in HACS (README image uses a full URL).
+
 ## [0.6.0] - 2026-10-11
 
 ### Added
@@ -73,7 +78,8 @@ breaking changes. These are always listed under **Changed** or **Removed**.
   event and the `zeromouse.download_images` action.
 - English and Norwegian (Bokmål) translations.
 
-[Unreleased]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.4.0...v0.4.1

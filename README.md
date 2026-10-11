@@ -1,4 +1,4 @@
-<img src="custom_components/zeromouse/brand/icon@2x.png" alt="" width="128" align="right">
+<img src="https://raw.githubusercontent.com/kevinsch95/ha-zeromouse/main/custom_components/zeromouse/brand/icon@2x.png" alt="ZeroMOUSE icon" width="128" align="right">
 
 # ZeroMOUSE for Home Assistant
 
