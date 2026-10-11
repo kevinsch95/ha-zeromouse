@@ -35,6 +35,21 @@ def frame_durations(times: Sequence[int | None]) -> list[int]:
     return durations
 
 
+def _shared_palette(images: Sequence[Image.Image]) -> Image.Image:
+    """Return a 256-colour palette image representative of all frames."""
+    sample_w = 160
+    tiles = [
+        img.resize((sample_w, max(1, round(img.height * sample_w / img.width))))
+        for img in images
+    ]
+    sheet = Image.new("RGB", (sample_w, sum(t.height for t in tiles)))
+    y = 0
+    for tile in tiles:
+        sheet.paste(tile, (0, y))
+        y += tile.height
+    return sheet.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+
+
 def build_gif(
     frames: Sequence[bytes],
     times: Sequence[int | None] | None = None,
@@ -54,9 +69,10 @@ def build_gif(
             frame = frame.resize(images[0].size, Image.Resampling.LANCZOS)
         images.append(frame)
 
-    # One shared adaptive palette from the first frame keeps colours stable
-    # between frames (the camera image barely changes) and the file small.
-    palette = images[0].quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+    # One shared adaptive palette sampled from every frame keeps colours
+    # stable between frames and the file small, while frames that look very
+    # different (e.g. the IR light switching on) still get their own colours.
+    palette = _shared_palette(images)
     paletted = [
         img.quantize(palette=palette, dither=Image.Dither.NONE) for img in images
     ]

@@ -162,6 +162,12 @@
     },
     "download_failed": {
       "message": "Downloading the images failed: {error}"
+    },
+    "media_not_found": {
+      "message": "ZeroMOUSE media {identifier} was not found or its account is not loaded."
+    },
+    "history_failed": {
+      "message": "Could not load the ZeroMOUSE event history: {error}"
     }
   }
 }

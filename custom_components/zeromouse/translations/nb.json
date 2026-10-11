@@ -162,6 +162,12 @@
     },
     "download_failed": {
       "message": "Nedlasting av bildene mislyktes: {error}"
+    },
+    "media_not_found": {
+      "message": "ZeroMOUSE-mediet {identifier} ble ikke funnet, eller kontoen er ikke lastet."
+    },
+    "history_failed": {
+      "message": "Kunne ikke laste ZeroMOUSE-hendelseshistorikken: {error}"
     }
   }
 }

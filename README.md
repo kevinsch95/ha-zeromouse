@@ -78,6 +78,16 @@ action:
 
 iPhones show the GIF animated in the expanded notification. Android usually shows the first frame and animates it when you open it.
 
+### Event history in the Media panel
+
+Open **Media** in the sidebar and choose **ZeroMOUSE**. You'll find each device with one folder per day for
+the last 30 days (newest first, with the number of events). Inside a day, every event is listed with its time,
+classification and cat, plus a thumbnail. Click an event to play its GIF.
+
+The history is read from the ZeroMOUSE cloud when you browse, so it also includes events from before the
+integration was installed. GIFs are built on demand and cached in memory; the first open of an event takes a
+moment while its photos download.
+
 ### Action: `zeromouse.download_images`
 
 Saves all images of an event (default: the latest) as `<folder>/<device>/<event>/<n>.jpg`, plus `animation.gif` when the event has several photos.

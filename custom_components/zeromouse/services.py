@@ -20,9 +20,10 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .api import ZeroMouseError
-from .const import DOMAIN, IMAGE_SUBFOLDER, MAX_IMAGES_PER_EVENT
+from .const import DOMAIN, IMAGE_SUBFOLDER
 from .coordinator import ZeroMouseConfigEntry, ZeroMouseCoordinator
 from .gif import build_gif
+from .history import async_fetch_frames
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,40 +95,33 @@ async def _async_download_images(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN, translation_key="no_event"
         )
 
-    # Known image indexes for the latest event; otherwise probe sequentially.
-    is_latest = latest is not None and latest.event_id == event_id
-    known = latest.image_indexes if is_latest else []
-    capture_times = (
-        dict(zip(known, latest.image_times, strict=True)) if is_latest else {}
-    )
-    candidates = known or list(range(MAX_IMAGES_PER_EVENT))
+    # Known photo indexes come from the latest event or the history cache;
+    # otherwise the photos are probed by index.
+    event = latest if latest is not None and latest.event_id == event_id else None
+    if event is None:
+        try:
+            event = await coordinator.history.async_get_event(zm_id, event_id)
+        except ZeroMouseError:
+            event = None
+    indexes = event.image_indexes if event else []
+    capture_times = event.image_times if event else []
+
+    try:
+        frames, times = await async_fetch_frames(
+            coordinator.api, zm_id, event_id, indexes, capture_times
+        )
+    except ZeroMouseError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="download_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     files: list[str] = []
-    frames: list[bytes] = []
-    times: list[int | None] = []
-    misses = 0
-    for index in candidates:
-        try:
-            image = await coordinator.api.async_get_image(zm_id, event_id, index)
-        except ZeroMouseError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="download_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        if image is None:
-            misses += 1
-            # Probing unknown indexes: stop after a gap once images were found,
-            # or give up if the first few indexes don't exist.
-            if not known and misses >= (2 if files else 3):
-                break
-            continue
-        misses = 0
+    for index, image in frames:
         path = Path(directory) / zm_id / event_id / f"{index}.jpg"
         await hass.async_add_executor_job(_write_file, path, image)
         files.append(str(path))
-        frames.append(image)
-        times.append(capture_times.get(index))
 
     if not files:
         raise HomeAssistantError(
@@ -138,7 +132,9 @@ async def _async_download_images(call: ServiceCall) -> ServiceResponse:
     response: dict[str, Any] = {"event_id": event_id, "files": files}
     if len(frames) > 1:
         try:
-            gif = await hass.async_add_executor_job(build_gif, frames, times)
+            gif = await hass.async_add_executor_job(
+                build_gif, [data for _, data in frames], times
+            )
         except (OSError, ValueError) as err:
             # The photos are saved; only the animation is skipped.
             _LOGGER.warning("Could not build animation for %s: %s", event_id, err)

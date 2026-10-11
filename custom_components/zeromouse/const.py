@@ -43,6 +43,18 @@ CLASSIFICATIONS: Final = [
     CLASSIFICATION_UNKNOWN,
 ]
 CLASSIFICATION_PREY: Final = "prey"
+# Titles in the media browser (it has no translation support for item titles).
+CLASSIFICATION_LABELS: Final = {
+    "prey": "Prey",
+    "clean": "No prey",
+    "early": "Early",
+    "late": "Late",
+    "out": "Out",
+    "free": "Free",
+    "test": "Test",
+    "undecidable": "Undecidable",
+    CLASSIFICATION_UNKNOWN: "Unknown",
+}
 
 # Shadow `system.kkzmBlockModeIn` / `system.kkzmBlockModeOut`.
 ENTRY_MODES: Final = {

@@ -285,12 +285,25 @@ class ZeroMouseApi:
         self, device_id: str, limit: int = EVENT_FETCH_LIMIT
     ) -> list[dict[str, Any]]:
         """Return the newest events for a device, newest first."""
+        items, _ = await self.async_list_events_page(device_id, limit)
+        return items
+
+    async def async_list_events_page(
+        self, device_id: str, limit: int, next_token: str | None = None
+    ) -> tuple[list[dict[str, Any]], str | None]:
+        """Return one page of events (newest first) and the token for the next."""
         data = await self._graphql(
             LIST_EVENTS_QUERY,
-            {"deviceID": device_id, "sortDirection": "DESC", "limit": limit},
+            {
+                "deviceID": device_id,
+                "sortDirection": "DESC",
+                "limit": limit,
+                "nextToken": next_token,
+            },
         )
         result = data.get("listEventbyDeviceChrono") or {}
-        return [item for item in result.get("items") or [] if item]
+        items = [item for item in result.get("items") or [] if item]
+        return items, result.get("nextToken")
 
     # ------------------------------------------------------------------
     # REST API (API Gateway)

@@ -25,6 +25,7 @@ from .const import (
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_LIVE,
 )
+from .history import ZeroMouseHistory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +37,13 @@ type ZeroMouseConfigEntry = ConfigEntry[ZeroMouseCoordinator]
 def _truthy(value: Any) -> bool:
     """Interpret the backend's mixed bool/int flags."""
     return value not in (None, False, 0, "0", "false")
+
+
+def is_visible(item: dict[str, Any]) -> bool:
+    """Return True for events not deleted or hidden in the app."""
+    return bool(item.get("eventID")) and not (
+        _truthy(item.get("isDeleted")) or _truthy(item.get("isHidden"))
+    )
 
 
 def _is_older(event: ZeroMouseEvent, than: ZeroMouseEvent | None) -> bool:
@@ -174,6 +182,7 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
+        self.history = ZeroMouseHistory(hass, api)
         self.live_connected = False
         self._followup_unsub: CALLBACK_TYPE | None = None
 
@@ -183,13 +192,7 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
         device = ZeroMouseDevice(device_id=device_id, flap=flap)
 
         events = await self.api.async_list_events(device_id)
-        visible = [
-            e
-            for e in events
-            if e.get("eventID")
-            and not _truthy(e.get("isDeleted"))
-            and not _truthy(e.get("isHidden"))
-        ]
+        visible = [e for e in events if is_visible(e)]
         if visible:
             device.latest_event = ZeroMouseEvent.from_api(visible[0])
         if previous and (kept := previous.latest_event):
