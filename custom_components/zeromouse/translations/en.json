@@ -37,7 +37,12 @@
   },
   "entity": {
     "binary_sensor": {
-      "prey_detected": { "name": "Prey detected" }
+      "prey_detected": {
+        "name": "Prey detected"
+      },
+      "live_updates": {
+        "name": "Live updates"
+      }
     },
     "event": {
       "detection": {
@@ -60,10 +65,14 @@
       }
     },
     "image": {
-      "latest_event_image": { "name": "Latest event image" }
+      "latest_event_image": {
+        "name": "Latest event image"
+      }
     },
     "sensor": {
-      "last_event": { "name": "Last event" },
+      "last_event": {
+        "name": "Last event"
+      },
       "last_classification": {
         "name": "Last classification",
         "state": {
@@ -78,8 +87,12 @@
           "unknown": "Unknown"
         }
       },
-      "last_cat": { "name": "Last cat" },
-      "event_count": { "name": "Event count" },
+      "last_cat": {
+        "name": "Last cat"
+      },
+      "event_count": {
+        "name": "Event count"
+      },
       "entry_mode": {
         "name": "Entry mode",
         "state": {
@@ -97,8 +110,12 @@
           "time_based": "Time based"
         }
       },
-      "boot_count": { "name": "Boot count" },
-      "network": { "name": "Wi-Fi network" }
+      "boot_count": {
+        "name": "Boot count"
+      },
+      "network": {
+        "name": "Wi-Fi network"
+      }
     }
   },
   "services": {

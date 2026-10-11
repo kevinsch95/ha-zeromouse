@@ -9,6 +9,10 @@ DOMAIN: Final = "zeromouse"
 MANUFACTURER: Final = "ZeroMOUSE"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=60)
+# Polling is only a safety net while the live connection is up.
+UPDATE_INTERVAL_LIVE: Final = timedelta(minutes=5)
+# After a live event, poll again shortly to pick up images and counters.
+LIVE_FOLLOWUP_DELAY: Final = 20  # seconds
 
 # Backend configuration, taken from the ZeroMOUSE Android app (v1.14.18).
 REGION: Final = "eu-central-1"

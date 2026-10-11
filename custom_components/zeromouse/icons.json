@@ -1,26 +1,56 @@
 {
   "entity": {
     "binary_sensor": {
-      "prey_detected": { "default": "mdi:rodent" }
+      "prey_detected": {
+        "default": "mdi:rodent"
+      },
+      "live_updates": {
+        "default": "mdi:access-point-network",
+        "state": {
+          "off": "mdi:access-point-network-off"
+        }
+      }
     },
     "event": {
-      "detection": { "default": "mdi:cat" }
+      "detection": {
+        "default": "mdi:cat"
+      }
     },
     "image": {
-      "latest_event_image": { "default": "mdi:camera" }
+      "latest_event_image": {
+        "default": "mdi:camera"
+      }
     },
     "sensor": {
-      "last_event": { "default": "mdi:history" },
-      "last_classification": { "default": "mdi:magnify-scan" },
-      "last_cat": { "default": "mdi:cat" },
-      "event_count": { "default": "mdi:counter" },
-      "entry_mode": { "default": "mdi:door-open" },
-      "exit_mode": { "default": "mdi:door-closed" },
-      "boot_count": { "default": "mdi:restart" },
-      "network": { "default": "mdi:wifi" }
+      "last_event": {
+        "default": "mdi:history"
+      },
+      "last_classification": {
+        "default": "mdi:magnify-scan"
+      },
+      "last_cat": {
+        "default": "mdi:cat"
+      },
+      "event_count": {
+        "default": "mdi:counter"
+      },
+      "entry_mode": {
+        "default": "mdi:door-open"
+      },
+      "exit_mode": {
+        "default": "mdi:door-closed"
+      },
+      "boot_count": {
+        "default": "mdi:restart"
+      },
+      "network": {
+        "default": "mdi:wifi"
+      }
     }
   },
   "services": {
-    "download_images": { "service": "mdi:image-move" }
+    "download_images": {
+      "service": "mdi:image-move"
+    }
   }
 }

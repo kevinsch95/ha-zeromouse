@@ -11,6 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 from .api import ZeroMouseApi
 from .const import DOMAIN
 from .coordinator import ZeroMouseConfigEntry, ZeroMouseCoordinator
+from .realtime import ZeroMouseRealtime
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
@@ -31,8 +32,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ZeroMouseConfigEntry) -> bool:
     """Set up ZeroMOUSE from a config entry."""
+    session = async_get_clientsession(hass)
     api = ZeroMouseApi(
-        async_get_clientsession(hass),
+        session,
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
     )
@@ -40,6 +42,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZeroMouseConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Live events; cancelled automatically when the entry unloads.
+    realtime = ZeroMouseRealtime(
+        session,
+        api.async_get_access_token,
+        coordinator.async_handle_live_event,
+        coordinator.async_set_live_connected,
+    )
+    entry.async_create_background_task(
+        hass, realtime.async_run(), f"{DOMAIN} live events"
+    )
     return True
 
 

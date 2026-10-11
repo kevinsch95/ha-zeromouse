@@ -28,9 +28,22 @@ One Home Assistant device per ZeroMOUSE, with:
 | Last cat | Sensor | Name of the cat recognised in the newest event |
 | Event count | Sensor | Total events recorded by the device |
 | Entry mode / Exit mode | Sensor (enum) | Current blocking modes from the device shadow |
+| Live updates | Diagnostic binary sensor | On while the live event connection is up |
 | Boot count, Wi-Fi network | Diagnostic sensors | Disabled by default |
 
-The integration polls the cloud every 60 seconds. Each new event also fires a `zeromouse_event` on the event bus:
+### Live events
+
+New detections arrive **live**, the same way the app gets them: the integration keeps an AWS AppSync
+GraphQL subscription (`onCreateMbrPtfEventData`) open over a websocket. When an event arrives, the sensors,
+the Detection event entity and the event bus update within a second or two. About 20 seconds later
+a follow-up poll fetches the event's image list and counters, and the image entity reloads once the photo
+has been uploaded.
+
+Polling remains as a safety net: every 5 minutes while the live connection is up, and every 60 seconds if it
+drops. The connection reconnects automatically with backoff and is renewed every 45 minutes, before the login
+token expires. The **Live updates** diagnostic sensor shows its state.
+
+Each new event also fires a `zeromouse_event` on the event bus:
 
 ```yaml
 trigger:
@@ -62,7 +75,7 @@ response_variable: result
 ## How it works
 
 - Login: AWS Cognito (SRP) with the same user pool as the app; tokens are refreshed automatically.
-- Status and events: AWS AppSync GraphQL (`listFlapByOwnerID`, `listEventbyDeviceChrono`) and the device-shadow REST endpoint.
+- Status and events: AWS AppSync GraphQL (`listFlapByOwnerID`, `listEventbyDeviceChrono`), the AppSync real-time subscription `onCreateMbrPtfEventData`, and the device-shadow REST endpoint.
 - Images: S3 objects under the account's private Cognito-identity folder, fetched with temporary credentials from the identity pool.
 
 The integration is read-only: it does not change modes or settings on the device.

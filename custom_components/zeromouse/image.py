@@ -7,6 +7,7 @@ import logging
 from homeassistant.components.image import ImageEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .api import ZeroMouseError
 from .coordinator import ZeroMouseConfigEntry, ZeroMouseCoordinator
@@ -42,6 +43,7 @@ class ZeroMouseLatestImage(ZeroMouseEntity, ImageEntity):
         ImageEntity.__init__(self, coordinator.hass)
         self._image_key: tuple[str, int] | None = None
         self._cached: bytes | None = None
+        self._missing = False
         self._update_from_event()
 
     def _update_from_event(self) -> None:
@@ -50,7 +52,13 @@ class ZeroMouseLatestImage(ZeroMouseEntity, ImageEntity):
         if key != self._image_key:
             self._image_key = key
             self._cached = None
+            self._missing = False
             self._attr_image_last_updated = event.time if event else None
+        elif self._missing:
+            # Live events arrive before the photo is uploaded: bump the
+            # timestamp so the frontend asks for the image again.
+            self._missing = False
+            self._attr_image_last_updated = dt_util.utcnow()
         self._attr_extra_state_attributes = (
             {
                 "event_id": event.event_id,
@@ -80,8 +88,10 @@ class ZeroMouseLatestImage(ZeroMouseEntity, ImageEntity):
         except ZeroMouseError as err:
             _LOGGER.warning("Could not download image for event %s: %s", event_id, err)
             return None
+        if self._image_key != (event_id, index):
+            return image
         if image is None:
+            self._missing = True
             return None
-        if self._image_key == (event_id, index):
-            self._cached = image
+        self._cached = image
         return image

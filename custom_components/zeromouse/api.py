@@ -224,6 +224,11 @@ class ZeroMouseApi:
             assert self._cognito is not None
             return self._cognito.access_token, self._cognito.id_token
 
+    async def async_get_access_token(self, force_refresh: bool = False) -> str:
+        """Return a valid access token (used by the live connection)."""
+        access_token, _ = await self._async_tokens(force=force_refresh)
+        return access_token
+
     # ------------------------------------------------------------------
     # AppSync GraphQL
     # ------------------------------------------------------------------

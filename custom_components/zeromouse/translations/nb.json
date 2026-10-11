@@ -39,6 +39,9 @@
     "binary_sensor": {
       "prey_detected": {
         "name": "Byttedyr oppdaget"
+      },
+      "live_updates": {
+        "name": "Direkteoppdateringer"
       }
     },
     "event": {

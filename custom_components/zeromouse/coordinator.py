@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -20,10 +21,14 @@ from .const import (
     CLASSIFICATIONS,
     DOMAIN,
     EVENT_NEW_DETECTION,
+    LIVE_FOLLOWUP_DELAY,
     UPDATE_INTERVAL,
+    UPDATE_INTERVAL_LIVE,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+LIVE_EVENT_GRACE = timedelta(minutes=10)
 
 type ZeroMouseConfigEntry = ConfigEntry[ZeroMouseCoordinator]
 
@@ -31,6 +36,15 @@ type ZeroMouseConfigEntry = ConfigEntry[ZeroMouseCoordinator]
 def _truthy(value: Any) -> bool:
     """Interpret the backend's mixed bool/int flags."""
     return value not in (None, False, 0, "0", "false")
+
+
+def _is_older(event: ZeroMouseEvent, than: ZeroMouseEvent | None) -> bool:
+    """Return True if `event` is strictly older than `than`."""
+    if than is None or event.event_id == than.event_id:
+        return False
+    if event.time is None or than.time is None:
+        return False
+    return event.time < than.time
 
 
 def parse_event_time(event: dict[str, Any]) -> datetime | None:
@@ -138,7 +152,7 @@ class ZeroMouseDevice:
 
 
 class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
-    """Polls the ZeroMOUSE cloud for all devices of the account."""
+    """Keeps ZeroMOUSE data current via live events plus polling."""
 
     config_entry: ZeroMouseConfigEntry
 
@@ -154,6 +168,8 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
+        self.live_connected = False
+        self._followup_unsub: CALLBACK_TYPE | None = None
 
     async def _async_update_device(self, flap: dict[str, Any]) -> ZeroMouseDevice:
         device_id = flap["deviceID"]
@@ -170,8 +186,8 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
         ]
         if visible:
             device.latest_event = ZeroMouseEvent.from_api(visible[0])
-        elif previous:
-            device.latest_event = previous.latest_event
+        if previous and (kept := previous.latest_event):
+            device.latest_event = self._pick_latest(device.latest_event, kept, events)
 
         try:
             shadow = await self.api.async_get_shadow(device_id)
@@ -183,6 +199,30 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
             if previous:
                 device.reported = previous.reported
         return device
+
+    @staticmethod
+    def _pick_latest(
+        polled: ZeroMouseEvent | None,
+        kept: ZeroMouseEvent,
+        events: list[dict[str, Any]],
+    ) -> ZeroMouseEvent | None:
+        """Choose between the polled newest event and the one we already had.
+
+        The previous event wins only if the poll hasn't seen it at all: either
+        the poll returned nothing, or it is a recent live event that the poll
+        started too early to include. Deleted or hidden events still appear in
+        the polled list, so those are dropped.
+        """
+        if kept.event_id in {e.get("eventID") for e in events}:
+            return polled
+        if polled is None:
+            return kept
+        recent = (
+            kept.time is not None and dt_util.utcnow() - kept.time < LIVE_EVENT_GRACE
+        )
+        if recent and _is_older(polled, kept):
+            return kept
+        return polled
 
     async def _async_update_data(self) -> dict[str, ZeroMouseDevice]:
         try:
@@ -223,7 +263,9 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
                 if previous and previous.latest_event
                 else None
             )
-            if event.event_id == previous_id:
+            if event.event_id == previous_id or (
+                previous and _is_older(event, previous.latest_event)
+            ):
                 continue
             self.hass.bus.async_fire(
                 EVENT_NEW_DETECTION,
@@ -237,3 +279,66 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
                     "time": event.time.isoformat() if event.time else None,
                 },
             )
+
+    # ------------------------------------------------------------------
+    # Live updates
+    # ------------------------------------------------------------------
+
+    @callback
+    def async_set_live_connected(self, connected: bool) -> None:
+        """Track the live connection and adapt the polling interval."""
+        if connected == self.live_connected:
+            return
+        self.live_connected = connected
+        self.update_interval = UPDATE_INTERVAL_LIVE if connected else UPDATE_INTERVAL
+        _LOGGER.debug("Live updates %s", "connected" if connected else "disconnected")
+        if not connected and self.config_entry.state is ConfigEntryState.LOADED:
+            # Catch up on anything missed while the link was down.
+            self.hass.async_create_task(self.async_request_refresh())
+        self.async_update_listeners()
+
+    @callback
+    def async_handle_live_event(self, item: dict[str, Any]) -> None:
+        """Apply an event pushed by the AppSync subscription."""
+        if self.data is None or not item.get("eventID"):
+            return
+        device_id = item.get("deviceID")
+        device = self.data.get(device_id)
+        if device is None:
+            _LOGGER.debug("Live event for unknown device %s, refreshing", device_id)
+            self._schedule_followup()
+            return
+        if _truthy(item.get("isDeleted")) or _truthy(item.get("isHidden")):
+            return
+
+        event = ZeroMouseEvent.from_api(item)
+        if event.raw_classification is None or _is_older(event, device.latest_event):
+            # Not classified yet (or out of order): let the follow-up poll decide.
+            self._schedule_followup()
+            return
+
+        _LOGGER.debug("Live event %s on %s", event.event_id, device_id)
+        new_data = {**self.data, device_id: replace(device, latest_event=event)}
+        self._fire_new_events(new_data)
+        self.async_set_updated_data(new_data)
+        # Images and counters arrive a little later; fetch them then.
+        self._schedule_followup()
+
+    @callback
+    def _schedule_followup(self) -> None:
+        if self._followup_unsub:
+            self._followup_unsub()
+
+        @callback
+        def _run(_now: datetime) -> None:
+            self._followup_unsub = None
+            self.hass.async_create_task(self.async_request_refresh())
+
+        self._followup_unsub = async_call_later(self.hass, LIVE_FOLLOWUP_DELAY, _run)
+
+    async def async_shutdown(self) -> None:
+        """Cancel pending follow-ups."""
+        if self._followup_unsub:
+            self._followup_unsub()
+            self._followup_unsub = None
+        await super().async_shutdown()
