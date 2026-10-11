@@ -2,14 +2,14 @@
   "domain": "zeromouse",
   "name": "ZeroMOUSE",
   "codeowners": [
-    "@your-github-username"
+    "@kevinsch95"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/your-github-username/ha-zeromouse",
+  "documentation": "https://github.com/kevinsch95/ha-zeromouse",
   "integration_type": "hub",
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/your-github-username/ha-zeromouse/issues",
+  "issue_tracker": "https://github.com/kevinsch95/ha-zeromouse/issues",
   "loggers": [
     "boto3",
     "botocore",
