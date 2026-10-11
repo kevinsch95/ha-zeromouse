@@ -25,6 +25,7 @@ One Home Assistant device per ZeroMOUSE, with:
 | Latest event image | Image | Title photo of the newest event |
 | Latest event animation | Image (GIF) | All photos of the newest event as an animated GIF, played slower than capture speed (25% by default, see Options) |
 | Detection | Event | Fires on each new event; event type is the classification |
+| Block prey | Switch | The app's **Block prey** setting: on = the flap blocks when prey is detected, off = only record events. Attributes show whether the device has confirmed the change |
 | Prey detected | Binary sensor | On when the newest event was classified as prey |
 | Last event | Sensor (timestamp) | Time of the newest event (attributes: event id, cat, image count) |
 | Last classification | Sensor (enum) | `prey`, `clean`, `early`, `late`, `out`, `free`, `test`, `undecidable` or `unknown` |
@@ -117,7 +118,7 @@ Open **Settings → Devices & services → ZeroMOUSE → Configure** to change:
 - Status and events: AWS AppSync GraphQL (`listFlapByOwnerID`, `listEventbyDeviceChrono`), the AppSync real-time subscription `onCreateMbrPtfEventData`, and the device-shadow REST endpoint.
 - Images: S3 objects under the account's private Cognito-identity folder, fetched with temporary credentials from the identity pool.
 
-The integration is read-only: it does not change modes or settings on the device.
+The only setting the integration changes is **Block prey**. It sends the same request as the app's switch (`{"rfid": {"blockEnabled": 1}}` or `0` to the device shadow). The switch shows the requested state straight away; the device applies it the next time it syncs, and the `pending` attribute is `true` until it has confirmed.
 
 ## Versions
 

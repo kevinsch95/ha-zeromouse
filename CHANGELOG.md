@@ -14,6 +14,13 @@ breaking changes. These are always listed under **Changed** or **Removed**.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-11
+
+### Added
+- **Block prey** switch, the same setting as the app's switch: on blocks the flap when prey is detected, off
+  only records events. It shows the requested state immediately, and `confirmed_by_device` / `pending`
+  attributes show when the device has applied it.
+
 ## [0.5.0] - 2026-10-11
 
 ### Added
@@ -66,7 +73,8 @@ breaking changes. These are always listed under **Changed** or **Removed**.
   event and the `zeromouse.download_images` action.
 - English and Norwegian (Bokmål) translations.
 
-[Unreleased]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/kevinsch95/ha-zeromouse/compare/v0.3.0...v0.4.0

@@ -10,7 +10,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -137,6 +137,7 @@ class ZeroMouseDevice:
     flap: dict[str, Any]
     latest_event: ZeroMouseEvent | None = None
     reported: dict[str, Any] = field(default_factory=dict)
+    desired: dict[str, Any] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -159,6 +160,21 @@ class ZeroMouseDevice:
             if cluster and cluster.get("id") == cluster_id:
                 return cluster.get("name") or cluster_id
         return cluster_id
+
+    def shadow_value(self, section: str, key: str) -> tuple[Any, Any]:
+        """Return (requested, confirmed) for a shadow setting.
+
+        `requested` is the desired value (falling back to reported when no
+        change is pending), `confirmed` the value the device last reported.
+        """
+
+        def _get(state: dict[str, Any]) -> Any:
+            part = state.get(section)
+            return part.get(key) if isinstance(part, dict) else None
+
+        confirmed = _get(self.reported)
+        requested = _get(self.desired)
+        return (confirmed if requested is None else requested), confirmed
 
     @property
     def system(self) -> dict[str, Any]:
@@ -204,11 +220,14 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
             shadow = await self.api.async_get_shadow(device_id)
             reported = shadow.get("reported")
             device.reported = reported if isinstance(reported, dict) else {}
+            desired = shadow.get("desired")
+            device.desired = desired if isinstance(desired, dict) else {}
         except ZeroMouseError as err:
             # The shadow is optional; keep the last known state.
             _LOGGER.debug("Could not read shadow for %s: %s", device_id, err)
             if previous:
                 device.reported = previous.reported
+                device.desired = previous.desired
         return device
 
     @staticmethod
@@ -296,6 +315,36 @@ class ZeroMouseCoordinator(DataUpdateCoordinator[dict[str, ZeroMouseDevice]]):
         """Return the GIF duration factor from the options (1.25 = 25% slower)."""
         percent = self.config_entry.options.get(CONF_GIF_SLOWDOWN, DEFAULT_GIF_SLOWDOWN)
         return 1 + float(percent) / 100
+
+    async def async_set_shadow_value(
+        self, device_id: str, section: str, key: str, value: Any
+    ) -> None:
+        """Request a device setting change, like the app's settings switches.
+
+        The new value shows immediately as the requested state; the device
+        confirms it (reported state) the next time it syncs.
+        """
+        try:
+            await self.api.async_update_shadow(device_id, {section: {key: value}})
+        except ZeroMouseAuthError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except ZeroMouseError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        if self.data and (device := self.data.get(device_id)):
+            desired = {**device.desired}
+            desired[section] = {**(desired.get(section) or {}), key: value}
+            self.async_set_updated_data(
+                {**self.data, device_id: replace(device, desired=desired)}
+            )
+        self._schedule_followup()
 
     # ------------------------------------------------------------------
     # Live updates

@@ -119,6 +119,19 @@
       "network": {
         "name": "Wi-Fi-nettverk"
       }
+    },
+    "switch": {
+      "block_prey": {
+        "name": "Blokker byttedyr",
+        "state_attributes": {
+          "confirmed_by_device": {
+            "name": "Bekreftet av enheten"
+          },
+          "pending": {
+            "name": "Venter"
+          }
+        }
+      }
     }
   },
   "services": {
@@ -168,6 +181,9 @@
     },
     "history_failed": {
       "message": "Kunne ikke laste ZeroMOUSE-hendelseshistorikken: {error}"
+    },
+    "set_failed": {
+      "message": "Endring av en ZeroMOUSE-innstilling mislyktes: {error}"
     }
   },
   "options": {

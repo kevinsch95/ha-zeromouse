@@ -363,6 +363,21 @@ class ZeroMouseApi:
         state = inner.get("state", inner)
         return state if isinstance(state, dict) else {}
 
+    async def async_update_shadow(
+        self, device_id: str, desired: dict[str, Any]
+    ) -> None:
+        """Request a change of the device's desired state.
+
+        Same call as the app's settings switches, e.g.
+        {"rfid": {"blockEnabled": 1}}. The device applies it when it next syncs.
+        """
+        await self._rest(
+            "PATCH",
+            "/device-shadow/",
+            params={"deviceID": device_id},
+            json_body=desired,
+        )
+
     # ------------------------------------------------------------------
     # Event images (S3 via Cognito Identity Pool credentials)
     # ------------------------------------------------------------------

@@ -49,6 +49,14 @@
       "network": {
         "default": "mdi:wifi"
       }
+    },
+    "switch": {
+      "block_prey": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off-outline"
+        }
+      }
     }
   },
   "services": {

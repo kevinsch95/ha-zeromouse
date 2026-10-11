@@ -119,6 +119,19 @@
       "network": {
         "name": "Wi-Fi network"
       }
+    },
+    "switch": {
+      "block_prey": {
+        "name": "Block prey",
+        "state_attributes": {
+          "confirmed_by_device": {
+            "name": "Confirmed by device"
+          },
+          "pending": {
+            "name": "Pending"
+          }
+        }
+      }
     }
   },
   "services": {
@@ -168,6 +181,9 @@
     },
     "history_failed": {
       "message": "Could not load the ZeroMOUSE event history: {error}"
+    },
+    "set_failed": {
+      "message": "Changing a ZeroMOUSE setting failed: {error}"
     }
   },
   "options": {
