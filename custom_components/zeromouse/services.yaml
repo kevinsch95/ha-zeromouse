@@ -1,0 +1,17 @@
+download_images:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: zeromouse
+    event_id:
+      required: false
+      example: "a1b2c3d4"
+      selector:
+        text:
+    directory:
+      required: false
+      example: /media/zeromouse
+      selector:
+        text:

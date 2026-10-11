@@ -1,0 +1,147 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sign in to ZeroMOUSE",
+        "description": "Use the same email and password as in the ZeroMOUSE app.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "Email address of your ZeroMOUSE account.",
+          "password": "Password of your ZeroMOUSE account."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate integration",
+        "description": "The password for {email} is no longer accepted. Enter the current password.",
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "Password of your ZeroMOUSE account."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication",
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "wrong_account": "The password belongs to a different ZeroMOUSE account."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "prey_detected": { "name": "Prey detected" }
+    },
+    "event": {
+      "detection": {
+        "name": "Detection",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "prey": "Prey",
+              "clean": "No prey",
+              "early": "Early",
+              "late": "Late",
+              "out": "Out",
+              "free": "Free",
+              "test": "Test",
+              "undecidable": "Undecidable",
+              "unknown": "Unknown"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "latest_event_image": { "name": "Latest event image" }
+    },
+    "sensor": {
+      "last_event": { "name": "Last event" },
+      "last_classification": {
+        "name": "Last classification",
+        "state": {
+          "prey": "Prey",
+          "clean": "No prey",
+          "early": "Early",
+          "late": "Late",
+          "out": "Out",
+          "free": "Free",
+          "test": "Test",
+          "undecidable": "Undecidable",
+          "unknown": "Unknown"
+        }
+      },
+      "last_cat": { "name": "Last cat" },
+      "event_count": { "name": "Event count" },
+      "entry_mode": {
+        "name": "Entry mode",
+        "state": {
+          "free_entry": "Free entry",
+          "blocking_prey": "Block prey",
+          "face_detection": "Face detection",
+          "locked": "Locked"
+        }
+      },
+      "exit_mode": {
+        "name": "Exit mode",
+        "state": {
+          "open": "Open",
+          "locked": "Locked",
+          "time_based": "Time based"
+        }
+      },
+      "boot_count": { "name": "Boot count" },
+      "network": { "name": "Wi-Fi network" }
+    }
+  },
+  "services": {
+    "download_images": {
+      "name": "Download event images",
+      "description": "Saves all images of a ZeroMOUSE event to a folder. Defaults to the latest event.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The ZeroMOUSE device."
+        },
+        "event_id": {
+          "name": "Event ID",
+          "description": "Event to download. Leave empty for the latest event."
+        },
+        "directory": {
+          "name": "Directory",
+          "description": "Target folder. Leave empty to use the zeromouse folder in your local media folder. Must be an allowed path."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "ZeroMOUSE rejected the stored credentials."
+    },
+    "update_failed": {
+      "message": "Error communicating with the ZeroMOUSE cloud: {error}"
+    },
+    "device_not_found": {
+      "message": "The selected device is not a loaded ZeroMOUSE device."
+    },
+    "directory_not_allowed": {
+      "message": "Home Assistant is not allowed to write to {directory}. Use a media folder or add it to allowlist_external_dirs."
+    },
+    "no_event": {
+      "message": "There is no event to download images for."
+    },
+    "no_images": {
+      "message": "No images were found for event {event_id}."
+    },
+    "download_failed": {
+      "message": "Downloading the images failed: {error}"
+    }
+  }
+}

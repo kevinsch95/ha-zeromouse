@@ -1,0 +1,161 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Logg inn på ZeroMOUSE",
+        "description": "Bruk samme e-post og passord som i ZeroMOUSE-appen.",
+        "data": {
+          "email": "E-post",
+          "password": "Passord"
+        },
+        "data_description": {
+          "email": "E-postadressen til ZeroMOUSE-kontoen din.",
+          "password": "Passordet til ZeroMOUSE-kontoen din."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Autentiser integrasjonen på nytt",
+        "description": "Passordet for {email} godtas ikke lenger. Skriv inn gjeldende passord.",
+        "data": {
+          "password": "Passord"
+        },
+        "data_description": {
+          "password": "Passordet til ZeroMOUSE-kontoen din."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ugyldig godkjenning",
+      "cannot_connect": "Tilkobling mislyktes",
+      "unknown": "Uventet feil"
+    },
+    "abort": {
+      "already_configured": "Kontoen er allerede konfigurert",
+      "reauth_successful": "Re-autentisering var vellykket",
+      "wrong_account": "Passordet tilhører en annen ZeroMOUSE-konto."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "prey_detected": {
+        "name": "Byttedyr oppdaget"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Deteksjon",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "prey": "Byttedyr",
+              "clean": "Uten byttedyr",
+              "early": "Tidlig",
+              "late": "Sen",
+              "out": "Ut",
+              "free": "Fri",
+              "test": "Test",
+              "undecidable": "Uavklart",
+              "unknown": "Ukjent"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "latest_event_image": {
+        "name": "Siste hendelsesbilde"
+      }
+    },
+    "sensor": {
+      "last_event": {
+        "name": "Siste hendelse"
+      },
+      "last_classification": {
+        "name": "Siste klassifisering",
+        "state": {
+          "prey": "Byttedyr",
+          "clean": "Uten byttedyr",
+          "early": "Tidlig",
+          "late": "Sen",
+          "out": "Ut",
+          "free": "Fri",
+          "test": "Test",
+          "undecidable": "Uavklart",
+          "unknown": "Ukjent"
+        }
+      },
+      "last_cat": {
+        "name": "Siste katt"
+      },
+      "event_count": {
+        "name": "Antall hendelser"
+      },
+      "entry_mode": {
+        "name": "Inngangsmodus",
+        "state": {
+          "free_entry": "Fri inngang",
+          "blocking_prey": "Blokker byttedyr",
+          "face_detection": "Ansiktsgjenkjenning",
+          "locked": "Låst"
+        }
+      },
+      "exit_mode": {
+        "name": "Utgangsmodus",
+        "state": {
+          "open": "Åpen",
+          "locked": "Låst",
+          "time_based": "Tidsstyrt"
+        }
+      },
+      "boot_count": {
+        "name": "Antall omstarter"
+      },
+      "network": {
+        "name": "Wi-Fi-nettverk"
+      }
+    }
+  },
+  "services": {
+    "download_images": {
+      "name": "Last ned hendelsesbilder",
+      "description": "Lagrer alle bildene fra en ZeroMOUSE-hendelse i en mappe. Standard er siste hendelse.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "ZeroMOUSE-enheten."
+        },
+        "event_id": {
+          "name": "Hendelses-ID",
+          "description": "Hendelsen som skal lastes ned. La stå tom for siste hendelse."
+        },
+        "directory": {
+          "name": "Mappe",
+          "description": "Målmappe. La stå tom for å bruke zeromouse-mappen i den lokale mediemappen. Må være en tillatt sti."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "ZeroMOUSE avviste den lagrede påloggingen."
+    },
+    "update_failed": {
+      "message": "Feil ved kommunikasjon med ZeroMOUSE-skyen: {error}"
+    },
+    "device_not_found": {
+      "message": "Den valgte enheten er ikke en lastet ZeroMOUSE-enhet."
+    },
+    "directory_not_allowed": {
+      "message": "Home Assistant har ikke lov til å skrive til {directory}. Bruk en mediemappe eller legg den til i allowlist_external_dirs."
+    },
+    "no_event": {
+      "message": "Det finnes ingen hendelse å laste ned bilder for."
+    },
+    "no_images": {
+      "message": "Fant ingen bilder for hendelse {event_id}."
+    },
+    "download_failed": {
+      "message": "Nedlasting av bildene mislyktes: {error}"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "prey_detected": { "default": "mdi:rodent" }
+    },
+    "event": {
+      "detection": { "default": "mdi:cat" }
+    },
+    "image": {
+      "latest_event_image": { "default": "mdi:camera" }
+    },
+    "sensor": {
+      "last_event": { "default": "mdi:history" },
+      "last_classification": { "default": "mdi:magnify-scan" },
+      "last_cat": { "default": "mdi:cat" },
+      "event_count": { "default": "mdi:counter" },
+      "entry_mode": { "default": "mdi:door-open" },
+      "exit_mode": { "default": "mdi:door-closed" },
+      "boot_count": { "default": "mdi:restart" },
+      "network": { "default": "mdi:wifi" }
+    }
+  },
+  "services": {
+    "download_images": { "service": "mdi:image-move" }
+  }
+}

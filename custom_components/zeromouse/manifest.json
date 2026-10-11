@@ -1,0 +1,23 @@
+{
+  "domain": "zeromouse",
+  "name": "ZeroMOUSE",
+  "codeowners": [
+    "@your-github-username"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/your-github-username/ha-zeromouse",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/your-github-username/ha-zeromouse/issues",
+  "loggers": [
+    "boto3",
+    "botocore",
+    "pycognito"
+  ],
+  "requirements": [
+    "pycognito>=2024.5.1",
+    "boto3>=1.34.0"
+  ],
+  "version": "0.1.0"
+}
