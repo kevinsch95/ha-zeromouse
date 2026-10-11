@@ -1,17 +1,31 @@
 name: Release
 
+# A release is published automatically when the version in manifest.json
+# changes on main: the workflow creates the vX.Y.Z tag and a GitHub release
+# with the matching CHANGELOG.md section as notes. It can also be run by hand
+# to publish a release for an older commit.
+
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
+    paths:
+      - custom_components/zeromouse/manifest.json
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Existing tag to publish a release for (e.g. v0.5.0)"
-        required: true
+      version:
+        description: "Version to release, e.g. 0.5.0 (default: manifest.json on main)"
+        required: false
+      ref:
+        description: "Commit to tag (default: latest commit on main)"
+        required: false
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -22,40 +36,64 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check tag, manifest and changelog
+      - name: Check version, manifest and changelog
         id: check
         env:
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          INPUT_REF: ${{ github.event.inputs.ref }}
         run: |
           set -euo pipefail
-          if ! [[ "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            echo "::error::Tag '$TAG' is not a semantic version like v1.2.3"; exit 1
+          SHA=$(git rev-parse "${INPUT_REF:-$GITHUB_SHA}^{commit}")
+          MANIFEST=$(git show "$SHA:custom_components/zeromouse/manifest.json" | jq -r .version)
+          VERSION="${INPUT_VERSION:-$MANIFEST}"
+          VERSION="${VERSION#v}"
+          if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::'$VERSION' is not a semantic version like 1.2.3"; exit 1
           fi
-          VERSION="${TAG#v}"
-          git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || { echo "::error::Tag $TAG does not exist"; exit 1; }
-          MANIFEST=$(git show "$TAG:custom_components/zeromouse/manifest.json" | jq -r .version)
           if [ "$MANIFEST" != "$VERSION" ]; then
-            echo "::error::manifest.json at $TAG says $MANIFEST, tag says $VERSION"; exit 1
+            echo "::error::manifest.json at ${SHA:0:7} says $MANIFEST, not $VERSION"; exit 1
           fi
-          # Release notes: the CHANGELOG section for this version (from the default branch).
+          TAG="v$VERSION"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAGGED=$(git rev-parse "$TAG^{commit}")
+            if [ "$TAGGED" != "$SHA" ] && [ -z "$INPUT_VERSION" ]; then
+              echo "$TAG already exists on ${TAGGED:0:7}; nothing to release."
+              echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            SHA="$TAGGED"
+          fi
+          # Notes: the CHANGELOG.md section for this version, from main.
+          git show "origin/${{ github.event.repository.default_branch }}:CHANGELOG.md" > changelog.md
           awk -v v="$VERSION" '
             $0 ~ "^## \\[" v "\\]" {found=1; next}
             found && /^## \[/ {exit}
             found && /^\[[^]]+\]: / {exit}
             found {print}
-          ' CHANGELOG.md | sed -e '/./,$!d' > notes.md
+          ' changelog.md | sed -e '/./,$!d' > notes.md
           if [ ! -s notes.md ]; then
             echo "::error::CHANGELOG.md has no section for [$VERSION]"; exit 1
           fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag=$TAG"
+            echo "sha=$SHA"
+            echo "skip=false"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create or update GitHub release
+        if: steps.check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.check.outputs.tag }}
+          SHA: ${{ steps.check.outputs.sha }}
         run: |
+          set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --title "$TAG" --notes-file notes.md
           else
-            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file notes.md
+            # Creates the tag on $SHA if it doesn't exist yet. Releases made
+            # from the past are not marked as latest.
+            LATEST=$(jq -r .version custom_components/zeromouse/manifest.json)
+            gh release create "$TAG" --target "$SHA" --title "$TAG" \
+              --notes-file notes.md --latest="$([ "v$LATEST" = "$TAG" ] && echo true || echo false)"
           fi
+          echo "Published $TAG on ${SHA:0:7}"

@@ -129,10 +129,10 @@ To publish a new version:
 
 1. Set `version` in `custom_components/zeromouse/manifest.json`, for example `0.6.0`.
 2. Move the notes under `## [Unreleased]` in `CHANGELOG.md` into a new `## [0.6.0] - YYYY-MM-DD` section.
-3. Commit, then tag and push: `git tag v0.6.0 && git push origin main v0.6.0`.
+3. Commit and push to `main`.
 
-The **Release** workflow checks that the tag matches the manifest and the changelog, then publishes the release
-with that changelog section as its notes.
+The **Release** workflow notices the new version, checks that `CHANGELOG.md` has a section for it, creates the
+`v0.6.0` tag and publishes the GitHub release with that section as its notes.
 
 ## Troubleshooting
 
