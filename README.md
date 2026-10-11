@@ -21,7 +21,7 @@ One Home Assistant device per ZeroMOUSE, with:
 | Entity | Type | Description |
 |---|---|---|
 | Latest event image | Image | Title photo of the newest event |
-| Latest event animation | Image (GIF) | All photos of the newest event as an animated GIF, played at capture speed |
+| Latest event animation | Image (GIF) | All photos of the newest event as an animated GIF, played 25% slower than capture speed |
 | Detection | Event | Fires on each new event; event type is the classification |
 | Prey detected | Binary sensor | On when the newest event was classified as prey |
 | Last event | Sensor (timestamp) | Time of the newest event (attributes: event id, cat, image count) |

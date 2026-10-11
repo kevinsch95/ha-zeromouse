@@ -8,8 +8,10 @@ from itertools import pairwise
 
 from PIL import Image
 
-# Playback limits (milliseconds). The photos carry their capture time, so the
-# animation runs in real time, clamped to stay watchable.
+# Playback timing (milliseconds). The photos carry their capture time; the gaps
+# are clamped to stay watchable, then everything is slowed down by
+# PLAYBACK_SLOWDOWN so the cat's movement is easier to follow.
+PLAYBACK_SLOWDOWN = 1.25
 DEFAULT_FRAME_MS = 250
 MIN_FRAME_MS = 60
 MAX_FRAME_MS = 1000
@@ -22,7 +24,7 @@ def frame_durations(times: Sequence[int | None]) -> list[int]:
 
     Frame i is shown until frame i+1 was captured. Missing or non-increasing
     times fall back to a default. The last frame is held a little longer so
-    the loop is easy to follow.
+    the loop is easy to follow. All durations are scaled by PLAYBACK_SLOWDOWN.
     """
     durations: list[int] = []
     for current, following in pairwise(times):
@@ -32,7 +34,9 @@ def frame_durations(times: Sequence[int | None]) -> list[int]:
             durations.append(min(max(following - current, MIN_FRAME_MS), MAX_FRAME_MS))
     if times:
         durations.append(LAST_FRAME_HOLD_MS)
-    return durations
+    # GIF stores delays in 10 ms steps; round here instead of letting the
+    # encoder truncate.
+    return [int(ms * PLAYBACK_SLOWDOWN / 10 + 0.5) * 10 for ms in durations]
 
 
 def _shared_palette(images: Sequence[Image.Image]) -> Image.Image:
