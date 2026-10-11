@@ -93,7 +93,11 @@ jobs:
             # Creates the tag on $SHA if it doesn't exist yet. Releases made
             # from the past are not marked as latest.
             LATEST=$(jq -r .version custom_components/zeromouse/manifest.json)
-            gh release create "$TAG" --target "$SHA" --title "$TAG" \
-              --notes-file notes.md --latest="$([ "v$LATEST" = "$TAG" ] && echo true || echo false)"
+            if ! OUT=$(gh release create "$TAG" --target "$SHA" --title "$TAG" \
+              --notes-file notes.md \
+              --latest="$([ "v$LATEST" = "$TAG" ] && echo true || echo false)" 2>&1); then
+              echo "::error::Could not create $TAG on ${SHA:0:7}: ${OUT//$'\n'/ }"
+              exit 1
+            fi
           fi
           echo "Published $TAG on ${SHA:0:7}"
